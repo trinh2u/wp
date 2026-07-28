@@ -2,14 +2,16 @@
 set -euo pipefail
 
 KIT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ROOT_DIR="/home"
+ROOT_DIR="auto"
+WP_CLI_BIN="auto"
 DRY_RUN=0
 CONFIG_FILE="/etc/wp-security-kit/config.conf"
 
-usage() { echo "Usage: sudo $0 [--root=/home] [--config=PATH] [--dry-run]"; }
+usage() { echo "Usage: sudo $0 [--root=auto|PATH] [--wp-cli=auto|PATH] [--config=PATH] [--dry-run]"; }
 for arg in "$@"; do
   case "$arg" in
     --root=*) ROOT_DIR="${arg#*=}" ;;
+    --wp-cli=*) WP_CLI_BIN="${arg#*=}" ;;
     --config=*) CONFIG_FILE="${arg#*=}" ;;
     --dry-run) DRY_RUN=1 ;;
     -h|--help) usage; exit 0 ;;
@@ -22,7 +24,21 @@ if [[ ! -f "$KIT_DIR/mu-plugins/pfhd-upload-guard.php" || ! -f "$KIT_DIR/mu-plug
   echo "Missing package files under $KIT_DIR/mu-plugins"; exit 1
 fi
 
-mapfile -t SITES < <(find "$ROOT_DIR" -type f -name wp-config.php -not -path '*/wp-content/*' -printf '%h\n' 2>/dev/null | sort -u)
+if [[ "$WP_CLI_BIN" == "auto" ]]; then
+  WP_CLI_BIN="$(command -v wp || true)"
+  [[ -n "$WP_CLI_BIN" ]] || { for candidate in /usr/local/bin/wp /usr/bin/wp /www/server/wp-cli.phar; do [[ -x "$candidate" ]] && WP_CLI_BIN="$candidate" && break; done; }
+fi
+[[ -n "$WP_CLI_BIN" && -x "$WP_CLI_BIN" ]] || { echo "WP-CLI not found; use --wp-cli=/absolute/path/to/wp"; exit 1; }
+
+if [[ "$ROOT_DIR" == "auto" ]]; then
+  ROOTS=()
+  for candidate in /www/wwwroot /home /var/www /srv/www /opt/www; do
+    [[ -d "$candidate" ]] && ROOTS+=("$candidate")
+  done
+else
+  ROOTS=("$ROOT_DIR")
+fi
+mapfile -t SITES < <(for root in "${ROOTS[@]}"; do find "$root" -type f -name wp-config.php -not -path '*/wp-content/*' -not -path '*/backups/*' -printf '%h\n' 2>/dev/null; done | sort -u)
 if [[ ${#SITES[@]} -eq 0 ]]; then echo "No WordPress sites found below $ROOT_DIR"; exit 1; fi
 echo "Found ${#SITES[@]} WordPress site(s):"; printf '  %s\n' "${SITES[@]}"
 
@@ -64,10 +80,10 @@ for site in "${SITES[@]}"; do
   else
     install -m 644 "$KIT_DIR/templates/uploads.htaccess" "$site/wp-content/uploads/.htaccess"
   fi
-  if command -v wp >/dev/null 2>&1; then
-    (cd "$site" && wp cron event run pfhd_upload_guard_scan --allow-root >/dev/null 2>&1 || true)
+  if [[ -x "$WP_CLI_BIN" ]]; then
+    (cd "$site" && "$WP_CLI_BIN" cron event run pfhd_upload_guard_scan --allow-root >/dev/null 2>&1 || true)
   fi
-  echo "*/5 * * * * cd $site && /usr/local/bin/wp cron event run --due-now --allow-root >> /tmp/wp-security-kit-cron.log 2>&1" > "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
+  echo "*/5 * * * * cd $site && $WP_CLI_BIN cron event run --due-now --allow-root >> /tmp/wp-security-kit-cron.log 2>&1" > "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
   chmod 644 "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
 done
 echo "Installation complete. Config: $CONFIG_FILE"

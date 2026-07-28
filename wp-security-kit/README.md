@@ -7,13 +7,13 @@ Bộ MU-plugin dùng cho các WordPress site trên cùng VPS của bạn.
 ```bash
 cd /root/wp-security-kit
 chmod +x install.sh
-sudo ./install.sh --root=/home
+sudo ./install.sh
 ```
 
 Chạy thử trước:
 
 ```bash
-sudo ./install.sh --root=/home --dry-run
+sudo ./install.sh --dry-run
 ```
 
 Installer hỏi Telegram bot token và group/chat ID một lần, lưu tại:
@@ -31,6 +31,12 @@ File này có quyền `600`, không nằm trong webroot và không được comm
 - Telegram config loader: đọc bot token/group ID từ `/etc/wp-security-kit/config.conf`.
 - `.htaccess`: ngăn thực thi script trong `wp-content/uploads`.
 - Cron: chạy `wp-cron` mỗi 5 phút cho từng site vì nhiều site tắt WP-Cron theo traffic.
+
+Installer tự dò các root phổ biến: `/www/wwwroot`, `/home`, `/var/www`, `/srv/www`, `/opt/www`; có thể chỉ định thủ công:
+
+```bash
+sudo ./install.sh --root=/www/wwwroot --wp-cli=/usr/local/bin/wp
+```
 
 ## Kiểm tra
 
