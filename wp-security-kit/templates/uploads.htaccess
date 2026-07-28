@@ -1,0 +1,7 @@
+# Block executable/script files in WordPress uploads.
+<FilesMatch "\.(php|phtml|phar|php3|php4|php5|php7|php8|pl|py|jsp|asp|aspx|sh|cgi|htaccess)$">
+    Require all denied
+</FilesMatch>
+<Files "index.php">
+    Require all granted
+</Files>

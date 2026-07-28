@@ -1,0 +1,15 @@
+*.conf
+*.env
+.env
+config/
+secrets/
+credentials/
+*.key
+*.pem
+*.sql
+*.sql.gz
+*.tar
+*.tar.gz
+backups/
+.DS_Store
+.vscode/
