@@ -38,6 +38,23 @@ Installer tự dò các root phổ biến: `/www/wwwroot`, `/home`, `/var/www`, 
 sudo ./install.sh --root=/www/wwwroot --wp-cli=/usr/local/bin/wp
 ```
 
+## Tự cài cho site mới
+
+Sau lần cài ban đầu, bật đồng bộ định kỳ:
+
+```bash
+sudo chmod +x sync-sites.sh
+sudo ./sync-sites.sh
+```
+
+Cron mỗi 10 phút:
+
+```cron
+*/10 * * * * /root/wp-security-kit/sync-sites.sh >> /var/log/wp-security-kit-sync.log 2>&1
+```
+
+Script lưu các site đã cài tại `/var/lib/wp-security-kit/installed-sites`, có lock chống chạy đồng thời và chỉ cài site mới.
+
 ## Kiểm tra
 
 ```bash
