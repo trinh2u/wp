@@ -11,6 +11,7 @@ MU-plugins and operational scripts for hardening and monitoring WordPress sites 
 - **WP-Cron dispatcher** — hits `wp-cron.php` every 5 minutes per site, since many sites disable traffic-based cron.
 - **Site isolation** (aaPanel only) — dedicated Linux user + PHP-FPM pool per site, so a compromised site can't write into another site on the same host. New sites are picked up automatically.
 - **Core checksum monitoring** — runs `wp core verify-checksums` across every site on a schedule and alerts on unauthorized or modified core files.
+- **Root-file / fake-image guard** — flags unrecognized files sitting in a site's root directory (blind spot of checksum monitoring, which only covers core WP paths) and detects image-extension files whose real content is a ZIP/PHP/executable payload instead of an actual image.
 
 See **[wp-security-kit/README.md](wp-security-kit/README.md)** (tiếng Việt) for full setup, cron examples, and usage of every script.
 
@@ -40,7 +41,8 @@ That file is `600`, lives outside the webroot, and is git-ignored.
 ## Requirements
 
 - WP-CLI available as `wp` (or pass `--wp-cli=/path/to/wp`).
-- Site isolation and checksum monitoring (`isolate-site.sh`, `auto-isolate.sh`, `checksum-guard.sh`) are **aaPanel-specific** — they detect aaPanel's SQLite site database on startup and refuse to run on any other panel (CyberPanel, Plesk, plain LEMP, etc.) so they can't misfire on a host with a different layout.
+- `file` (libmagic) available — used by `root-file-guard.sh` to read real file content type.
+- Site isolation, checksum monitoring, and the root-file guard (`isolate-site.sh`, `auto-isolate.sh`, `checksum-guard.sh`, `root-file-guard.sh`) are **aaPanel-specific** — they detect aaPanel's SQLite site database on startup and refuse to run on any other panel (CyberPanel, Plesk, plain LEMP, etc.) so they can't misfire on a host with a different layout.
 
 ## Check
 

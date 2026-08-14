@@ -34,15 +34,18 @@ bên dưới cũng đọc chung file này để gửi cảnh báo Telegram.
 - Cron: chạy `wp-cron` mỗi 5 phút cho từng site vì nhiều site tắt WP-Cron theo traffic.
 - **Cách ly site** (`isolate-site.sh` + `auto-isolate.sh`): mỗi site 1 user Linux + 1 pool PHP-FPM riêng.
 - **Giám sát checksum** (`checksum-guard.sh`): phát hiện file lạ/sai checksum trong core WordPress, báo Telegram.
+- **Giám sát file root + ảnh giả** (`root-file-guard.sh`): phát hiện file lạ ở thư mục gốc site (checksum-guard
+  không quét tới) và file mang đuôi ảnh nhưng nội dung thật là ZIP/PHP/executable.
 
 ## Yêu cầu
 
 - **WP-CLI** (`wp`) có sẵn trong PATH, hoặc truyền `--wp-cli=/path/to/wp` cho `install.sh`.
-- **`isolate-site.sh`, `auto-isolate.sh`, `checksum-guard.sh` chỉ chạy trên aaPanel.** Cả 3 tự kiểm tra sự
-  tồn tại của DB SQLite đặc trưng của aaPanel (`/www/server/panel/data/default.db`) ngay dòng đầu, **thoát
-  luôn kèm thông báo rõ ràng** nếu không phải aaPanel — nên copy sang server dùng CyberPanel/Plesk/LEMP
-  thường... cũng không sợ chạy nhầm và phá cấu trúc panel đó. Upload Guard, Core Update Guard, `sync-sites.sh`
-  không bị giới hạn này (không đụng gì đặc thù panel).
+- **`file` (libmagic)** có sẵn — dùng để đọc mime type thật của file trong `root-file-guard.sh`.
+- **`isolate-site.sh`, `auto-isolate.sh`, `checksum-guard.sh`, `root-file-guard.sh` chỉ chạy trên aaPanel.**
+  Cả 4 tự kiểm tra sự tồn tại của DB SQLite đặc trưng của aaPanel (`/www/server/panel/data/default.db`) ngay
+  dòng đầu, **thoát luôn kèm thông báo rõ ràng** nếu không phải aaPanel — nên copy sang server dùng
+  CyberPanel/Plesk/LEMP thường... cũng không sợ chạy nhầm và phá cấu trúc panel đó. Upload Guard, Core Update
+  Guard, `sync-sites.sh` không bị giới hạn này (không đụng gì đặc thù panel).
 
 Installer tự dò các root phổ biến: `/www/wwwroot`, `/home`, `/var/www`, `/srv/www`, `/opt/www`; có thể chỉ định thủ công:
 
@@ -115,6 +118,39 @@ Log: `/var/log/wp-security-kit-checksum.log`. Chỉ gửi Telegram khi có cản
 ⚠️ `wp core verify-checksums` **exit code vẫn là 0** dù có `Warning:` — script không dựa vào exit code mà
 parse trực tiếp các dòng bắt đầu bằng `Warning:` trong output.
 
+## Giám sát file root + ảnh giả (root-file-guard.sh)
+
+`checksum-guard.sh` chỉ so khớp **core WordPress** (wp-admin/wp-includes + danh sách file root chính thức) —
+nó **không thấy** file hoàn toàn mới nằm ở thư mục gốc site (kiểu `defines.php` trong vụ 13/08). Và Upload
+Guard chỉ chặn theo **đuôi file** — một payload đổi đuôi thành `.jpg`/`.bmp` sẽ lọt qua thẳng. `root-file-guard.sh`
+vá 2 lỗ đó:
+
+1. **File lạ ở root** (`find <site> -maxdepth 1`, đối chiếu whitelist file core WP + vài file phổ biến không
+   phải core như `robots.txt`, `404.html`, file xác minh Google Search Console...). Tự động hoá đúng cách đã
+   dùng để dọn dẹp thủ công trong vụ hack 13/08.
+2. **Ảnh giả** — quét mọi file đuôi `.jpg/.jpeg/.png/.gif/.bmp/.webp/.ico` trong toàn site, đọc **mime type
+   thật** qua `file --mime-type`. Chỉ báo động khi mime là `application/zip`, `text/x-php`, `application/x-sh`
+   hoặc tương tự (đúng kiểu tấn công `tlogo.bmp` = ZIP giả ảnh, nạp bằng `include('zip://tlogo.bmp#tt')`).
+   Mime khác lạ nhưng vô hại hơn (`text/html`, `text/xml`, `application/octet-stream` — thường là ảnh tải lỗi/
+   hỏng, không phải tấn công) chỉ ghi log, **không** gửi Telegram để tránh spam.
+
+```bash
+sudo /root/wp-security-kit/root-file-guard.sh
+```
+
+Cron mỗi 6 tiếng (lệch 15 phút so với `checksum-guard.sh` để tránh chạy chồng):
+
+```cron
+15 */6 * * * /root/wp-security-kit/root-file-guard.sh
+```
+
+Log: `/var/log/wp-security-kit-rootguard.log`. Đã test cả 2 chiều: chạy trên 11 site sạch thật (dọn báo nhầm
+xuống 0, trừ 2 file `wp-config.php.bak*` — phát hiện thật, backup DB creds còn sót trong webroot, cần xoá thủ
+công) và giả lập tấn công thật (ZIP đổi tên `.bmp`, PHP đổi tên `.jpg`) — bắt đúng cả hai.
+
+⚠️ Quét toàn bộ ảnh mỗi site khá nặng — **~4 phút cho 11 site** trên server 155. Cân nhắc giãn cron nếu VPS có
+hàng chục nghìn ảnh.
+
 ## Kiểm tra
 
 ```bash
@@ -122,6 +158,7 @@ wp cron event list --allow-root | grep pfhd_upload_guard
 stat -c '%a %n' wp-admin wp-includes
 sudo /root/wp-security-kit/checksum-guard.sh && tail /var/log/wp-security-kit-checksum.log
 sudo /root/wp-security-kit/auto-isolate.sh && tail /var/log/auto-isolate.log
+sudo /root/wp-security-kit/root-file-guard.sh && tail /var/log/wp-security-kit-rootguard.log
 ```
 
 ## Lưu ý
