@@ -163,12 +163,12 @@ Cron mỗi 6 tiếng (lệch 15 phút so với `checksum-guard.sh` để tránh 
 15 */6 * * * /root/wp-security-kit/root-file-guard.sh
 ```
 
-Log: `/var/log/wp-security-kit-rootguard.log`. Đã test cả 2 chiều: chạy trên 11 site sạch thật (dọn báo nhầm
-xuống 0, trừ 2 file `wp-config.php.bak*` — phát hiện thật, backup DB creds còn sót trong webroot, cần xoá thủ
-công) và giả lập tấn công thật (ZIP đổi tên `.bmp`, PHP đổi tên `.jpg`) — bắt đúng cả hai.
+Log: `/var/log/wp-security-kit-rootguard.log`. Đã test cả 2 chiều: chạy trên nhiều site WordPress thật
+(whitelist đã được tune để giảm báo nhầm xuống 0 — xem phần whitelist trong code) và giả lập tấn công thật
+(ZIP đổi tên `.bmp`, PHP đổi tên `.jpg`) — bắt đúng cả hai.
 
-⚠️ Quét toàn bộ ảnh mỗi site khá nặng — **~4 phút cho 11 site** trong môi trường test. Cân nhắc giãn cron nếu VPS có
-hàng chục nghìn ảnh.
+⚠️ Quét toàn bộ ảnh mỗi site khá nặng — có thể mất vài phút mỗi lượt tuỳ số lượng ảnh trong site. Cân nhắc
+giãn cron nếu VPS có hàng chục nghìn ảnh.
 
 ## Kiểm tra
 
