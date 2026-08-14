@@ -83,7 +83,13 @@ for site in "${SITES[@]}"; do
   if [[ -x "$WP_CLI_BIN" ]]; then
     (cd "$site" && "$WP_CLI_BIN" cron event run pfhd_upload_guard_scan --allow-root >/dev/null 2>&1 || true)
   fi
-  echo "*/5 * * * * cd $site && $WP_CLI_BIN cron event run --due-now --allow-root >> /tmp/wp-security-kit-cron.log 2>&1" > "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
+  echo "*/5 * * * * root cd $site && $WP_CLI_BIN cron event run --due-now --allow-root >> /tmp/wp-security-kit-cron.log 2>&1" > "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
   chmod 644 "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
 done
+if [[ -x "$KIT_DIR/sync-sites.sh" ]]; then
+  echo "*/15 * * * * root $KIT_DIR/sync-sites.sh $ROOT_DIR >> /var/log/wp-security-kit-sync.log 2>&1" > /etc/cron.d/wp-security-kit-sync
+  chmod 644 /etc/cron.d/wp-security-kit-sync
+  echo "Registered periodic sync-sites.sh (every 15 min) at /etc/cron.d/wp-security-kit-sync"
+fi
+
 echo "Installation complete. Config: $CONFIG_FILE"

@@ -55,20 +55,24 @@ sudo ./install.sh --root=/www/wwwroot --wp-cli=/usr/local/bin/wp
 
 ## Tự cài cho site mới
 
-Sau lần cài ban đầu, bật đồng bộ định kỳ:
+`install.sh` **tự đăng ký cron** cho việc này — chỉ cần cài 1 lần, không phải làm gì thêm. Nó ghi
+`/etc/cron.d/wp-security-kit-sync` (chạy `sync-sites.sh` mỗi 15 phút) ngay trong lúc cài. Site nào mới tạo
+sau đó sẽ tự động có mu-plugins bảo vệ trong tối đa 15 phút, không cần chạy tay lại.
+
+Muốn đổi tần suất hoặc chạy tay để kiểm tra ngay:
 
 ```bash
-sudo chmod +x sync-sites.sh
-sudo ./sync-sites.sh
-```
-
-Cron mỗi 10 phút:
-
-```cron
-*/10 * * * * /root/wp-security-kit/sync-sites.sh >> /var/log/wp-security-kit-sync.log 2>&1
+sudo /root/wp-security-kit/sync-sites.sh          # chay tay ngay lap tuc
+sudo crontab -l 2>/dev/null; cat /etc/cron.d/wp-security-kit-sync   # xem lich hien tai
 ```
 
 Script lưu các site đã cài tại `/var/lib/wp-security-kit/installed-sites`, có lock chống chạy đồng thời và chỉ cài site mới.
+
+⚠️ **Bug đã fix**: bản cũ ghi entry `/etc/cron.d/wp-security-kit-<site>` (dispatcher wp-cron mỗi 5 phút)
+THIẾU cột "user" bắt buộc của định dạng `/etc/cron.d/` (khác `crontab -e` cá nhân không cần cột này) — cron
+âm thầm bỏ qua, dispatcher chưa từng chạy lần nào dù file tồn tại từ lâu. Cài lại `install.sh` bản mới sẽ tự
+sinh đúng định dạng; site cài từ bản cũ cần sửa tay các file `/etc/cron.d/wp-security-kit-<site>` (thêm `root`
+sau lịch chạy, trước lệnh).
 
 ## Cách ly site (isolate-site.sh / auto-isolate.sh)
 
