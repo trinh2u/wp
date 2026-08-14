@@ -72,8 +72,8 @@ Script lưu các site đã cài tại `/var/lib/wp-security-kit/installed-sites`
 
 ## Cách ly site (isolate-site.sh / auto-isolate.sh)
 
-Thêm sau sự cố hack 13/08/2026 trên server 155 (webshell của site A ghi được sang site B vì mọi site chạy
-chung 1 user `www` + 1 pool PHP-FPM). Mỗi site cách ly có:
+Thêm sự kiện kiểm tra webshell của site A ghi được sang site B vì mọi site chạy
+chung 1 user `www` + 1 pool PHP-FPM. Mỗi site cách ly có:
 
 - User Linux riêng `web_<domain>` (`-r -M -s /sbin/nologin`, không login được).
 - Pool PHP-FPM riêng, socket riêng, `pm = ondemand`.
@@ -101,7 +101,7 @@ tác root.
 ## Giám sát checksum (checksum-guard.sh)
 
 Chạy `wp core verify-checksums` cho mọi site, báo Telegram nếu phát hiện file lạ hoặc sai checksum trong core
-WordPress — đây chính là cách bắt được 9 webshell thật trong vụ 13/08/2026.
+WordPress.
 
 ```bash
 sudo /root/wp-security-kit/checksum-guard.sh
