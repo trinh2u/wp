@@ -121,13 +121,13 @@ parse trực tiếp các dòng bắt đầu bằng `Warning:` trong output.
 ## Giám sát file root + ảnh giả (root-file-guard.sh)
 
 `checksum-guard.sh` chỉ so khớp **core WordPress** (wp-admin/wp-includes + danh sách file root chính thức) —
-nó **không thấy** file hoàn toàn mới nằm ở thư mục gốc site (kiểu `defines.php` trong vụ 13/08). Và Upload
+nó **không thấy** file hoàn toàn mới nằm ở thư mục gốc site (kiểu file backdoor chèn ngoài core). Và Upload
 Guard chỉ chặn theo **đuôi file** — một payload đổi đuôi thành `.jpg`/`.bmp` sẽ lọt qua thẳng. `root-file-guard.sh`
 vá 2 lỗ đó:
 
 1. **File lạ ở root** (`find <site> -maxdepth 1`, đối chiếu whitelist file core WP + vài file phổ biến không
    phải core như `robots.txt`, `404.html`, file xác minh Google Search Console...). Tự động hoá đúng cách đã
-   dùng để dọn dẹp thủ công trong vụ hack 13/08.
+   dùng để dọn dẹp thủ công trước đây.
 2. **Ảnh giả** — quét mọi file đuôi `.jpg/.jpeg/.png/.gif/.bmp/.webp/.ico` trong toàn site, đọc **mime type
    thật** qua `file --mime-type`. Chỉ báo động khi mime là `application/zip`, `text/x-php`, `application/x-sh`
    hoặc tương tự (đúng kiểu tấn công `tlogo.bmp` = ZIP giả ảnh, nạp bằng `include('zip://tlogo.bmp#tt')`).
@@ -148,7 +148,7 @@ Log: `/var/log/wp-security-kit-rootguard.log`. Đã test cả 2 chiều: chạy 
 xuống 0, trừ 2 file `wp-config.php.bak*` — phát hiện thật, backup DB creds còn sót trong webroot, cần xoá thủ
 công) và giả lập tấn công thật (ZIP đổi tên `.bmp`, PHP đổi tên `.jpg`) — bắt đúng cả hai.
 
-⚠️ Quét toàn bộ ảnh mỗi site khá nặng — **~4 phút cho 11 site** trên server 155. Cân nhắc giãn cron nếu VPS có
+⚠️ Quét toàn bộ ảnh mỗi site khá nặng — **~4 phút cho 11 site** trong môi trường test. Cân nhắc giãn cron nếu VPS có
 hàng chục nghìn ảnh.
 
 ## Kiểm tra

@@ -1,10 +1,10 @@
 #!/bin/bash
 # Giam sat "wp core verify-checksums" cho moi site WordPress, bao Telegram khi phat hien
-# file la / sai checksum trong core WP. Day chinh la cach da bat duoc 9 webshell that
-# trong vu hack 13/08/2026 (xem project_server_155_incident_20260813).
+# file la / sai checksum trong core WP. Day chinh la cach da tung bat duoc mot loat webshell
+# that giau trong core WordPress cua nhieu site tren cung server.
 #
-# LUU Y: exit code cua "wp core verify-checksums" VAN LA 0 du co Warning (da test tay
-# 14/08/2026) -> khong duoc dua vao exit code, phai parse dong bat dau bang "Warning:".
+# LUU Y: exit code cua "wp core verify-checksums" VAN LA 0 du co Warning (da kiem tra tay) ->
+# khong duoc dua vao exit code, phai parse dong bat dau bang "Warning:".
 set -u
 
 # An toan: chi chay tren aaPanel, tranh chay nham tren CyberPanel/panel khac co cau truc khac han

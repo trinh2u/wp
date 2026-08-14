@@ -1,7 +1,7 @@
 #!/bin/bash
 # Cach ly 1 site: tao user Linux rieng + pool PHP-FPM rieng.
 # Dung: ./isolate-site.sh <domain>
-# Muc tieu: site khac KHONG GHI duoc vao site nay (chan dung duong tan cong 13/08).
+# Muc tieu: site khac KHONG GHI duoc vao site nay (chan duong tan cong lan cheo giua cac site).
 set -e
 
 # An toan: chi chay tren aaPanel, tranh chay nham tren CyberPanel/panel khac co cau truc khac han
@@ -17,7 +17,7 @@ POOLDIR=/www/server/php/83/etc/php-fpm.d
 POOL="$POOLDIR/${USER}.conf"
 FPMCONF=/www/server/php/83/etc/php-fpm.conf
 EXTDIR="/www/server/panel/vhost/nginx/extension/$SITE"
-BAK=/root/incident-aqua-155-20260813
+BAK=/root/wp-security-kit-backups
 
 echo "=== Site: $SITE | User: $USER | Socket: $SOCK ==="
 

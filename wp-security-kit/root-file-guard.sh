@@ -1,11 +1,11 @@
 #!/bin/bash
-# Phat hien 2 dang tan cong tu vu hack "aqua" 13/08/2026 ma checksum-guard.sh KHONG bat duoc:
+# Phat hien 2 dang tan cong ma checksum-guard.sh KHONG bat duoc:
 #
 # 1) File LA o thu muc GOC site (vd defines.php, shell ten ngau nhien) — day la cach tan cong
 #    dat file moi khong thuoc core WP, ma "wp core verify-checksums" CHI kiem tra core (wp-admin/
 #    wp-includes + danh sach file root chinh thuc) nen KHONG thay file moi ngoai danh sach do.
-#    Vu 13/08 phai "find <site> -maxdepth 1 -name *.php" don tay moi bat duoc — script nay tu dong hoa
-#    dung cach do.
+#    Truoc day phai "find <site> -maxdepth 1 -name *.php" don tay moi bat duoc — script nay
+#    tu dong hoa dung cach do.
 # 2) File "ANH" GIA — vd tlogo.bmp thuc chat la ZIP giau payload, nap bang
 #    include('zip://tlogo.bmp#tt'). Doi file thanh duoi anh de qua mat moi kiem tra theo TEN/DUOI file
 #    (Upload Guard cung chi check duoi). Script nay doc MAGIC BYTE that (qua `file --mime-type`) thay vi
@@ -31,7 +31,7 @@ alert() {
 }
 
 # File hop le duoc phep nam o ROOT 1 site WordPress (core WP + file thuong gap khong phai core).
-# Tuned tren du lieu THAT cua 11 site server 155 (14/08/2026) de giam bao nham: trang loi aaPanel
+# Tuned tren du lieu THAT cua nhieu site WordPress that de giam bao nham: trang loi aaPanel
 # (404/502.html), file xac minh Google Search Console, SITE_BLUEPRINT.md (template noi bo), backup
 # .htaccess, wordfence-waf.php (bootstrap chinh chu cua plugin Wordfence).
 # CO Y KHONG whitelist wp-config.php.bak* — backup lo creds DB trong webroot la rui ro that, van muon
@@ -67,7 +67,7 @@ for d in /www/wwwroot/*/; do
     case "$mime" in
       image/*) ;;  # that su la anh -> bo qua
       application/zip|application/x-php|text/x-php|application/x-httpd-php|application/x-sh|text/x-shellscript|application/x-executable|application/x-elf|application/x-dosexec)
-        # Dung dang chinh xac cua vu tlogo.bmp 13/08: ZIP/PHP/executable gia dang anh -> BAO DONG THAT
+        # Dung dang tan cong "anh gia": ZIP/PHP/executable doi ten thanh duoi anh -> BAO DONG THAT
         bad=$((bad+1))
         alert "SITE $site: ANH GIA NGUY HIEM - duoi anh nhung mime that la '$mime': $rel"
         echo "$(date '+%F %T') ANH-GIA-NGUY-HIEM $site: $f (mime=$mime)" >> "$LOG"
