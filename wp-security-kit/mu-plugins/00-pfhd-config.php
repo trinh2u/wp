@@ -3,7 +3,11 @@
 if (!defined('ABSPATH')) exit;
 
 $cfg = '/etc/wp-security-kit/config.conf';
-$values = is_readable($cfg) ? parse_ini_file($cfg, false, INI_SCANNER_RAW) : array();
+$values = array();
+if (@is_readable($cfg)) {
+    $parsed = @parse_ini_file($cfg, false, INI_SCANNER_RAW);
+    if (is_array($parsed)) $values = $parsed;
+}
 if (!defined('PFHD_TG_BOT_TOKEN')) define('PFHD_TG_BOT_TOKEN', (string)($values['PFHD_TG_BOT_TOKEN'] ?? ''));
 if (!defined('PFHD_TG_CHAT_ID')) define('PFHD_TG_CHAT_ID', (string)($values['PFHD_TG_CHAT_ID'] ?? ''));
 
