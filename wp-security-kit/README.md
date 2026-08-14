@@ -4,10 +4,13 @@ Bộ MU-plugin + script vận hành dùng cho các WordPress site trên cùng VP
 
 ## Cài đặt
 
-Dán nguyên khối 3 dòng dưới vào terminal (không cần chạy tay từng dòng — mỗi dòng cách nhau bằng xuống dòng
-tự chạy tuần tự khi paste):
+Dán nguyên khối dưới vào terminal (không cần chạy tay từng dòng — mỗi dòng cách nhau bằng xuống dòng tự
+chạy tuần tự khi paste). Toàn bộ tài liệu này giả định kit nằm ở `/root/wp-security-kit`, nên 2 dòng đầu
+lấy đúng thư mục con `wp-security-kit/` ra khỏi repo (tên repo trên GitHub là `wp`) rồi bỏ phần còn lại:
 
 ```bash
+git clone https://github.com/trinh2u/wp.git
+mv wp/wp-security-kit /root/wp-security-kit && rm -rf wp
 cd /root/wp-security-kit
 chmod +x install.sh
 sudo ./install.sh
