@@ -46,13 +46,13 @@ That file is `600`, lives outside the webroot, and is git-ignored.
 ## Requirements
 
 - WP-CLI available as `wp` (or pass `--wp-cli=/path/to/wp`).
-- `file` (libmagic) available — used by `root-file-guard.sh` to read real file content type.
+- `file` (libmagic) available — used by `guard-root-file.sh` to read real file content type.
 - **Works on any panel or plain LEMP/LAMP**: Upload Guard, Core Update Guard, `sync-sites.sh`,
-  `checksum-guard.sh`, `root-file-guard.sh`. They only need WP-CLI and sites under a common webroot
+  `guard-checksum.sh`, `guard-root-file.sh`. They only need WP-CLI and sites under a common webroot
   (`/www/wwwroot`, `/home`, `/var/www`, `/srv/www`, `/opt/www`).
-- **aaPanel-only**: `isolate-site.sh` / `auto-isolate.sh`. Not an arbitrary restriction — these two directly
+- **aaPanel-only**: `isolate-site.sh` / `isolate-auto.sh`. Not an arbitrary restriction — these two directly
   edit aaPanel's PHP-FPM pool layout (`/www/server/php/*/etc/php-fpm.d`) and nginx vhost structure
-  (`/www/server/panel/vhost/nginx/extension/`), and `auto-isolate.sh` reads aaPanel's own SQLite site
+  (`/www/server/panel/vhost/nginx/extension/`), and `isolate-auto.sh` reads aaPanel's own SQLite site
   registry to find new sites. Running that logic against a different panel's config format would corrupt it,
   so both scripts detect aaPanel's SQLite database on startup and exit immediately (no changes made) if it's
   missing. Other panels (CyberPanel, Plesk, cPanel) generally isolate each site under its own user by

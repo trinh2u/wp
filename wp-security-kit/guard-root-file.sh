@@ -1,5 +1,5 @@
 #!/bin/bash
-# Phat hien 2 dang tan cong ma checksum-guard.sh KHONG bat duoc:
+# Phat hien 2 dang tan cong ma guard-checksum.sh KHONG bat duoc:
 #
 # 1) File LA o thu muc GOC site (vd defines.php, shell ten ngau nhien) — day la cach tan cong
 #    dat file moi khong thuoc core WP, ma "wp core verify-checksums" CHI kiem tra core (wp-admin/
@@ -38,7 +38,7 @@ WHITELIST_REGEX='^(index\.php|index\.html|license\.txt|readme\.html|wp-activate\
 # Duoi anh raster co magic byte ro rang — KHONG gom .svg (SVG la text/xml, libmagic hay bao nham)
 IMG_EXTS=(-iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" -o -iname "*.bmp" -o -iname "*.webp" -o -iname "*.ico")
 
-# Tim site WP giong cach checksum-guard.sh / sync-sites.sh dang dung (khong lien ket, tu quet lai)
+# Tim site WP giong cach guard-checksum.sh / sync-sites.sh dang dung (khong lien ket, tu quet lai)
 ROOTS=()
 for candidate in /www/wwwroot /home /var/www /srv/www /opt/www; do
   [ -d "$candidate" ] && ROOTS+=("$candidate")
