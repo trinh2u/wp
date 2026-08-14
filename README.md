@@ -17,11 +17,14 @@ See **[wp-security-kit/README.md](wp-security-kit/README.md)** (tiếng Việt) 
 
 ## Install
 
-Paste the whole block below into your terminal at once — each line runs in sequence automatically:
+Paste the whole block below into your terminal at once — each line runs in sequence automatically. The
+`mv`/`rm` step pulls the `wp-security-kit` folder out of the cloned repo (named `wp` on GitHub) into
+`/root/wp-security-kit`, matching every absolute path used in the [Vietnamese docs](wp-security-kit/README.md):
 
 ```bash
 git clone https://github.com/trinh2u/wp.git
-cd wp/wp-security-kit
+mv wp/wp-security-kit /root/wp-security-kit && rm -rf wp
+cd /root/wp-security-kit
 chmod +x install.sh
 sudo ./install.sh --root=/home
 ```
