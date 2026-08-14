@@ -41,11 +41,18 @@ bên dưới cũng đọc chung file này để gửi cảnh báo Telegram.
 
 - **WP-CLI** (`wp`) có sẵn trong PATH, hoặc truyền `--wp-cli=/path/to/wp` cho `install.sh`.
 - **`file` (libmagic)** có sẵn — dùng để đọc mime type thật của file trong `root-file-guard.sh`.
-- **`isolate-site.sh`, `auto-isolate.sh`, `checksum-guard.sh`, `root-file-guard.sh` chỉ chạy trên aaPanel.**
-  Cả 4 tự kiểm tra sự tồn tại của DB SQLite đặc trưng của aaPanel (`/www/server/panel/data/default.db`) ngay
-  dòng đầu, **thoát luôn kèm thông báo rõ ràng** nếu không phải aaPanel — nên copy sang server dùng
-  CyberPanel/Plesk/LEMP thường... cũng không sợ chạy nhầm và phá cấu trúc panel đó. Upload Guard, Core Update
-  Guard, `sync-sites.sh` không bị giới hạn này (không đụng gì đặc thù panel).
+- **Chạy được trên mọi panel/server** (aaPanel, CyberPanel, Plesk, cPanel, LEMP/LAMP thường...):
+  Upload Guard, Core Update Guard, `sync-sites.sh`, **`checksum-guard.sh`, `root-file-guard.sh`** — cả 5 chỉ
+  cần WP-CLI + site nằm dưới 1 trong các thư mục phổ biến (`/www/wwwroot`, `/home`, `/var/www`, `/srv/www`,
+  `/opt/www`), không đụng gì đặc thù panel.
+- **Chỉ dành riêng cho aaPanel**: `isolate-site.sh` + `auto-isolate.sh`. Lý do KHÔNG phải giới hạn tuỳ tiện —
+  2 script này trực tiếp thao túng cấu trúc pool PHP-FPM (`/www/server/php/*/etc/php-fpm.d`) và vhost nginx
+  (`/www/server/panel/vhost/nginx/extension/`) đặc thù của riêng aaPanel, và `auto-isolate.sh` đọc thẳng DB
+  SQLite site registry của aaPanel để biết site nào mới. Đưa nguyên logic này sang panel khác sẽ ghi sai file
+  cấu hình của panel đó. Cả 2 tự kiểm tra `/www/server/panel/data/default.db` (dấu hiệu đặc trưng của
+  aaPanel) và **thoát ngay, không làm gì**, nếu không phải aaPanel — an toàn khi lỡ chạy nhầm server khác.
+  (Lý do sâu hơn: CyberPanel/Plesk/cPanel vốn đã cô lập user riêng cho từng site theo mặc định — vấn đề
+  "mọi site chung 1 user" mà 2 script này giải quyết chỉ tồn tại trên aaPanel.)
 
 Installer tự dò các root phổ biến: `/www/wwwroot`, `/home`, `/var/www`, `/srv/www`, `/opt/www`; có thể chỉ định thủ công:
 

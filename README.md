@@ -10,8 +10,8 @@ MU-plugins and operational scripts for hardening and monitoring WordPress sites 
 - **`.htaccess` hardening** — prevents script execution inside `wp-content/uploads`.
 - **WP-Cron dispatcher** — hits `wp-cron.php` every 5 minutes per site, since many sites disable traffic-based cron.
 - **Site isolation** (aaPanel only) — dedicated Linux user + PHP-FPM pool per site, so a compromised site can't write into another site on the same host. New sites are picked up automatically.
-- **Core checksum monitoring** — runs `wp core verify-checksums` across every site on a schedule and alerts on unauthorized or modified core files.
-- **Root-file / fake-image guard** — flags unrecognized files sitting in a site's root directory (blind spot of checksum monitoring, which only covers core WP paths) and detects image-extension files whose real content is a ZIP/PHP/executable payload instead of an actual image.
+- **Core checksum monitoring** (any panel) — runs `wp core verify-checksums` across every site on a schedule and alerts on unauthorized or modified core files.
+- **Root-file / fake-image guard** (any panel) — flags unrecognized files sitting in a site's root directory (blind spot of checksum monitoring, which only covers core WP paths) and detects image-extension files whose real content is a ZIP/PHP/executable payload instead of an actual image.
 
 See **[wp-security-kit/README.md](wp-security-kit/README.md)** (tiếng Việt) for full setup, cron examples, and usage of every script.
 
@@ -42,7 +42,16 @@ That file is `600`, lives outside the webroot, and is git-ignored.
 
 - WP-CLI available as `wp` (or pass `--wp-cli=/path/to/wp`).
 - `file` (libmagic) available — used by `root-file-guard.sh` to read real file content type.
-- Site isolation, checksum monitoring, and the root-file guard (`isolate-site.sh`, `auto-isolate.sh`, `checksum-guard.sh`, `root-file-guard.sh`) are **aaPanel-specific** — they detect aaPanel's SQLite site database on startup and refuse to run on any other panel (CyberPanel, Plesk, plain LEMP, etc.) so they can't misfire on a host with a different layout.
+- **Works on any panel or plain LEMP/LAMP**: Upload Guard, Core Update Guard, `sync-sites.sh`,
+  `checksum-guard.sh`, `root-file-guard.sh`. They only need WP-CLI and sites under a common webroot
+  (`/www/wwwroot`, `/home`, `/var/www`, `/srv/www`, `/opt/www`).
+- **aaPanel-only**: `isolate-site.sh` / `auto-isolate.sh`. Not an arbitrary restriction — these two directly
+  edit aaPanel's PHP-FPM pool layout (`/www/server/php/*/etc/php-fpm.d`) and nginx vhost structure
+  (`/www/server/panel/vhost/nginx/extension/`), and `auto-isolate.sh` reads aaPanel's own SQLite site
+  registry to find new sites. Running that logic against a different panel's config format would corrupt it,
+  so both scripts detect aaPanel's SQLite database on startup and exit immediately (no changes made) if it's
+  missing. Other panels (CyberPanel, Plesk, cPanel) generally isolate each site under its own user by
+  default already — the "every site shares one user" problem these scripts fix is specific to aaPanel.
 
 ## Check
 

@@ -12,9 +12,6 @@
 #    tin duoi file.
 set -u
 
-# An toan: chi chay tren aaPanel
-[ -f /www/server/panel/data/default.db ] || { echo "KHONG PHAI aaPanel (thieu /www/server/panel/data/default.db) - AAPANEL_GUARD dung script." >&2; exit 1; }
-
 LOG=/var/log/wp-security-kit-rootguard.log
 CFG=/etc/wp-security-kit/config.conf
 [ -f "$CFG" ] && . "$CFG"
@@ -31,8 +28,8 @@ alert() {
 }
 
 # File hop le duoc phep nam o ROOT 1 site WordPress (core WP + file thuong gap khong phai core).
-# Tuned tren du lieu THAT cua nhieu site WordPress that de giam bao nham: trang loi aaPanel
-# (404/502.html), file xac minh Google Search Console, SITE_BLUEPRINT.md (template noi bo), backup
+# Tuned tren du lieu THAT cua nhieu site WordPress that de giam bao nham: trang loi mac dinh cua
+# panel/webserver (404/502.html), file xac minh Google Search Console, template noi bo, backup
 # .htaccess, wordfence-waf.php (bootstrap chinh chu cua plugin Wordfence).
 # CO Y KHONG whitelist wp-config.php.bak* — backup lo creds DB trong webroot la rui ro that, van muon
 # duoc bao.
@@ -41,11 +38,20 @@ WHITELIST_REGEX='^(index\.php|index\.html|license\.txt|readme\.html|wp-activate\
 # Duoi anh raster co magic byte ro rang — KHONG gom .svg (SVG la text/xml, libmagic hay bao nham)
 IMG_EXTS=(-iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" -o -iname "*.bmp" -o -iname "*.webp" -o -iname "*.ico")
 
+# Tim site WP giong cach checksum-guard.sh / sync-sites.sh dang dung (khong lien ket, tu quet lai)
+ROOTS=()
+for candidate in /www/wwwroot /home /var/www /srv/www /opt/www; do
+  [ -d "$candidate" ] && ROOTS+=("$candidate")
+done
+
+mapfile -t SITE_DIRS < <(for r in "${ROOTS[@]}"; do
+  find "$r" -maxdepth 1 -type d -not -path "$r" 2>/dev/null
+done | sort -u)
+
 bad=0
 
-for d in /www/wwwroot/*/; do
+for d in "${SITE_DIRS[@]}"; do
   site=$(basename "$d")
-  [ "$site" = "default" ] && continue
   [ -f "$d/wp-config.php" ] || continue
   root="${d%/}"
 
@@ -73,8 +79,8 @@ for d in /www/wwwroot/*/; do
         echo "$(date '+%F %T') ANH-GIA-NGUY-HIEM $site: $f (mime=$mime)" >> "$LOG"
         ;;
       *)
-        # Nghi ngo NHE (html/xml/octet-stream...) - thuong la anh tai loi/hong (vd bug OPhim API
-        # 12/08 lam REDACTED tai nham trang loi thay vi anh that), KHONG phai dau hieu tan cong.
+        # Nghi ngo NHE (html/xml/octet-stream...) - thuong la anh tai loi/hong (vd API nguon anh
+        # doi format tra ve trang loi thay vi anh that), KHONG phai dau hieu tan cong.
         # Chi ghi log de tham khao, KHONG gui Telegram — tranh spam hang loat khi co site bi loi tai anh.
         echo "$(date '+%F %T') nghi-ngo-nhe $site: $f (mime=$mime)" >> "$LOG"
         ;;

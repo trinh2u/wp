@@ -6,9 +6,6 @@
 # LUU Y: exit code cua "wp core verify-checksums" VAN LA 0 du co Warning (da kiem tra tay) ->
 # khong duoc dua vao exit code, phai parse dong bat dau bang "Warning:".
 set -u
-
-# An toan: chi chay tren aaPanel, tranh chay nham tren CyberPanel/panel khac co cau truc khac han
-[ -f /www/server/panel/data/default.db ] || { echo "KHONG PHAI aaPanel (thieu /www/server/panel/data/default.db) - AAPANEL_GUARD dung script." >&2; exit 1; }
 KIT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG=/var/log/wp-security-kit-checksum.log
 CFG=/etc/wp-security-kit/config.conf
