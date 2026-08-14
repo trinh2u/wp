@@ -35,6 +35,15 @@ bên dưới cũng đọc chung file này để gửi cảnh báo Telegram.
 - **Cách ly site** (`isolate-site.sh` + `auto-isolate.sh`): mỗi site 1 user Linux + 1 pool PHP-FPM riêng.
 - **Giám sát checksum** (`checksum-guard.sh`): phát hiện file lạ/sai checksum trong core WordPress, báo Telegram.
 
+## Yêu cầu
+
+- **WP-CLI** (`wp`) có sẵn trong PATH, hoặc truyền `--wp-cli=/path/to/wp` cho `install.sh`.
+- **`isolate-site.sh`, `auto-isolate.sh`, `checksum-guard.sh` chỉ chạy trên aaPanel.** Cả 3 tự kiểm tra sự
+  tồn tại của DB SQLite đặc trưng của aaPanel (`/www/server/panel/data/default.db`) ngay dòng đầu, **thoát
+  luôn kèm thông báo rõ ràng** nếu không phải aaPanel — nên copy sang server dùng CyberPanel/Plesk/LEMP
+  thường... cũng không sợ chạy nhầm và phá cấu trúc panel đó. Upload Guard, Core Update Guard, `sync-sites.sh`
+  không bị giới hạn này (không đụng gì đặc thù panel).
+
 Installer tự dò các root phổ biến: `/www/wwwroot`, `/home`, `/var/www`, `/srv/www`, `/opt/www`; có thể chỉ định thủ công:
 
 ```bash
