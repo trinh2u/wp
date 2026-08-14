@@ -11,6 +11,7 @@ KIT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG=/var/log/auto-isolate.log
 ISOLATE="$KIT_DIR/isolate-site.sh"
 CHANGED=0
+PHPVERS=""
 
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG"; }
 
@@ -39,12 +40,23 @@ while IFS= read -r site; do
     log "Phat hien site moi chua cach ly: $site (owner=$owner) -> chay isolate-site.sh"
     out=$("$ISOLATE" "$site" 2>&1)
     echo "$out" >> "$LOG"
+    ver=$(echo "$out" | grep "^PHPVER=" | head -1 | cut -d= -f2)
+    [ -n "$ver" ] && PHPVERS="$PHPVERS $ver"
     CHANGED=1
 done <<< "$SITES"
 
 if [ "$CHANGED" = "1" ]; then
-    log "Co site moi duoc cach ly -> restart php-fpm-83 + reload nginx"
-    systemctl restart php-fpm-83 >> "$LOG" 2>&1
+    # Restart DUNG cac ban PHP-FPM thuc su bi dung toi trong lan chay nay (site co the dung
+    # nhieu ban PHP khac nhau tren cung server aaPanel), khong hardcode 1 ban duy nhat.
+    UNIQ_VERS=$(echo "$PHPVERS" | tr ' ' '\n' | sort -u | grep -v '^$')
+    if [ -n "$UNIQ_VERS" ]; then
+        for v in $UNIQ_VERS; do
+            log "Restart php-fpm-$v (site moi cach ly dung ban PHP nay)"
+            systemctl restart "php-fpm-$v" >> "$LOG" 2>&1
+        done
+    else
+        log "CANH BAO: co site duoc cach ly nhung khong xac dinh duoc ban PHP tu output -> khong restart php-fpm nao ca, kiem tra tay"
+    fi
     systemctl reload nginx >> "$LOG" 2>&1
     log "Xong."
 fi

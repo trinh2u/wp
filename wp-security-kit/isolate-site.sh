@@ -11,15 +11,31 @@ SITE="$1"
 ROOT="/www/wwwroot/$SITE"
 [ -d "$ROOT" ] || { echo "Khong thay $ROOT"; exit 1; }
 
+# Phat hien ban PHP THAT cua site (aaPanel cho chon PHP rieng tung site: 74/80/81/82/83...) -
+# doc tu vhost nginx, KHONG hardcode 1 ban duy nhat. Neu doan sai se tao pool cho ban PHP site
+# khong dung -> site van chay pool cu, cach ly coi nhu vo hieu ma khong bao loi ro rang.
+VHOST_CONF="/www/server/panel/vhost/nginx/$SITE.conf"
+PHPVER=""
+if [ -f "$VHOST_CONF" ]; then
+  PHPVER=$(grep -oE 'enable-php-[0-9]+' "$VHOST_CONF" | head -1 | grep -oE '[0-9]+')
+  [ -z "$PHPVER" ] && PHPVER=$(grep -oE 'php-cgi-[0-9]+\.sock' "$VHOST_CONF" | head -1 | grep -oE '[0-9]+')
+fi
+if [ -z "$PHPVER" ] || [ ! -d "/www/server/php/$PHPVER" ]; then
+  echo "LOI: khong xac dinh duoc ban PHP that cua site $SITE (vhost: $VHOST_CONF)." >&2
+  echo "     Kiem tra thu cong: grep php $VHOST_CONF" >&2
+  exit 1
+fi
+
 USER="web_$(echo "$SITE" | tr -cd 'a-zA-Z0-9' | cut -c1-24)"
-SOCK="/tmp/php-cgi-83-${USER}.sock"
-POOLDIR=/www/server/php/83/etc/php-fpm.d
+SOCK="/tmp/php-cgi-${PHPVER}-${USER}.sock"
+POOLDIR="/www/server/php/$PHPVER/etc/php-fpm.d"
 POOL="$POOLDIR/${USER}.conf"
-FPMCONF=/www/server/php/83/etc/php-fpm.conf
+FPMCONF="/www/server/php/$PHPVER/etc/php-fpm.conf"
 EXTDIR="/www/server/panel/vhost/nginx/extension/$SITE"
 BAK=/root/wp-security-kit-backups
 
-echo "=== Site: $SITE | User: $USER | Socket: $SOCK ==="
+echo "=== Site: $SITE | PHP: $PHPVER | User: $USER | Socket: $SOCK ==="
+echo "PHPVER=$PHPVER"
 
 # 1. Tao user rieng (khong shell, khong login)
 if id "$USER" >/dev/null 2>&1; then
@@ -63,7 +79,7 @@ echo "  da chown -R $USER:$USER $ROOT"
 # 5. Ep nginx cua site nay dung socket rieng (dat trong extension/ nen song sot khi aaPanel ghi lai vhost)
 mkdir -p "$EXTDIR"
 cat > "$EXTDIR/00-php-pool.conf" <<EOF
-# Pool PHP-FPM rieng cho $SITE (cach ly) - them 2026-08-13
+# Pool PHP-FPM rieng cho $SITE (cach ly)
 location ~ \.php(/|\$) {
     try_files \$uri \$uri/ /index.php?\$args;
     fastcgi_pass unix:$SOCK;
@@ -81,5 +97,5 @@ EOF
 echo "  da tao $EXTDIR/00-php-pool.conf"
 
 echo "=== Kiem tra cau hinh ==="
-/www/server/php/83/sbin/php-fpm -t -y "$FPMCONF" 2>&1 | tail -2
+"/www/server/php/$PHPVER/sbin/php-fpm" -t -y "$FPMCONF" 2>&1 | tail -2
 nginx -t 2>&1 | tail -2

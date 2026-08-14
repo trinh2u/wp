@@ -22,8 +22,7 @@ Installer hỏi Telegram bot token và group/chat ID một lần, lưu tại:
 /etc/wp-security-kit/config.conf
 ```
 
-File này có quyền `600`, không nằm trong webroot và không được commit lên Git. Các script cách ly/checksum
-bên dưới cũng đọc chung file này để gửi cảnh báo Telegram.
+File này có quyền `600`, không nằm trong webroot và không được commit lên Git — mọi script trong bộ kit đều đọc chung file này để gửi cảnh báo Telegram.
 
 ## Chức năng
 
@@ -83,12 +82,15 @@ sau lịch chạy, trước lệnh).
 
 ## Cách ly site (isolate-site.sh / auto-isolate.sh)
 
-Thêm sự kiện kiểm tra webshell của site A ghi được sang site B vì mọi site chạy
-chung 1 user `www` + 1 pool PHP-FPM. Mỗi site cách ly có:
+Cách ly từng site bằng user Linux + pool PHP-FPM riêng, vá vấn đề cấu hình mặc định của aaPanel: mọi
+site chạy chung 1 user `www` + 1 pool PHP-FPM, nên site A bị chiếm quyền (vd dính webshell) là ghi/đọc chéo
+được sang site B ngay. Mỗi site cách ly có:
 
 - User Linux riêng `web_<domain>` (`-r -M -s /sbin/nologin`, không login được).
 - Pool PHP-FPM riêng, socket riêng, `pm = ondemand`.
 - Ownership file site đổi hết sang user đó — site khác không ghi/đọc chéo được nữa.
+- **Tự phát hiện đúng phiên bản PHP của từng site** (đọc từ vhost nginx, không hardcode 1 bản) — server
+  aaPanel có nhiều site chạy PHP khác nhau (7.4/8.0/8.1/8.2/8.3...) vẫn cách ly đúng bản đang dùng.
 
 Chạy tay cho 1 site:
 
