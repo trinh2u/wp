@@ -4,6 +4,9 @@ Bộ MU-plugin + script vận hành dùng cho các WordPress site trên cùng VP
 
 ## Cài đặt
 
+Dán nguyên khối 3 dòng dưới vào terminal (không cần chạy tay từng dòng — mỗi dòng cách nhau bằng xuống dòng
+tự chạy tuần tự khi paste):
+
 ```bash
 cd /root/wp-security-kit
 chmod +x install.sh

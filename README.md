@@ -17,6 +17,8 @@ See **[wp-security-kit/README.md](wp-security-kit/README.md)** (tiếng Việt) 
 
 ## Install
 
+Paste the whole block below into your terminal at once — each line runs in sequence automatically:
+
 ```bash
 git clone https://github.com/trinh2u/wp.git
 cd wp/wp-security-kit
