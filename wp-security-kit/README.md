@@ -52,6 +52,9 @@ File này có quyền `600`, không nằm trong webroot và không được comm
 ## Yêu cầu
 
 - **WP-CLI** (`wp`) có sẵn trong PATH, hoặc truyền `--wp-cli=/path/to/wp` cho `install.sh`.
+- `run-wp.sh` tự dùng system PHP khi tương thích; nếu system PHP thiếu `mysqli` (thường gặp trên CyberPanel),
+  script thử các LiteSpeed PHP CLI từ 7.4 trở lên và cache binary chạy được cho từng site tại
+  `/var/lib/wp-security-kit/php-map/`.
 - **`file` (libmagic)** có sẵn — dùng để đọc mime type thật của file trong `guard-root-file.sh`.
 - **Chạy được trên mọi panel/server** (aaPanel, CyberPanel, Plesk, cPanel, LEMP/LAMP thường...):
   Upload Guard, Core Update Guard, `sync-sites.sh`, **`guard-checksum.sh`, `guard-root-file.sh`** — cả 5 chỉ
@@ -189,6 +192,7 @@ stat -c '%a %n' wp-admin wp-includes
 sudo /root/wp-security-kit/guard-checksum.sh && tail /var/log/wp-security-kit-checksum.log
 sudo /root/wp-security-kit/isolate-auto.sh && tail /var/log/auto-isolate.log
 sudo /root/wp-security-kit/guard-root-file.sh && tail /var/log/wp-security-kit-rootguard.log
+sudo /root/wp-security-kit/run-wp.sh /path/to/site cron event list --allow-root
 ```
 
 Lần quét đầu tiên tự tạo baseline và không gửi cảnh báo. Sau một thay đổi hợp lệ, vào

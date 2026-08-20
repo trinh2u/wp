@@ -20,7 +20,7 @@ for arg in "$@"; do
 done
 
 if [[ $EUID -ne 0 ]]; then echo "Run as root: sudo $0"; exit 1; fi
-if [[ ! -f "$KIT_DIR/mu-plugins/pfhd-upload-guard.php" || ! -f "$KIT_DIR/mu-plugins/pfhd-core-update.php" || ! -f "$KIT_DIR/mu-plugins/wp-security-monitor.php" ]]; then
+if [[ ! -f "$KIT_DIR/mu-plugins/pfhd-upload-guard.php" || ! -f "$KIT_DIR/mu-plugins/pfhd-core-update.php" || ! -f "$KIT_DIR/mu-plugins/wp-security-monitor.php" || ! -f "$KIT_DIR/run-wp.sh" ]]; then
   echo "Missing package files under $KIT_DIR/mu-plugins"; exit 1
 fi
 
@@ -48,6 +48,7 @@ done | while IFS= read -r site; do
 done | sort -u)
 if [[ ${#SITES[@]} -eq 0 ]]; then echo "No WordPress sites found below $ROOT_DIR"; exit 1; fi
 echo "Found ${#SITES[@]} WordPress site(s):"; printf '  %s\n' "${SITES[@]}"
+if (( DRY_RUN == 0 )); then chmod 755 "$KIT_DIR/run-wp.sh"; fi
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
   if (( DRY_RUN )); then
@@ -89,9 +90,9 @@ for site in "${SITES[@]}"; do
     install -m 644 "$KIT_DIR/templates/uploads.htaccess" "$site/wp-content/uploads/.htaccess"
   fi
   if [[ -x "$WP_CLI_BIN" ]]; then
-    (cd "$site" && "$WP_CLI_BIN" cron event run pfhd_upload_guard_scan --allow-root >/dev/null 2>&1 || true)
+    "$KIT_DIR/run-wp.sh" --wp-cli="$WP_CLI_BIN" "$site" cron event run pfhd_upload_guard_scan --allow-root >/dev/null 2>&1 || true
   fi
-  echo "*/5 * * * * root cd $site && $WP_CLI_BIN cron event run --due-now --allow-root >> /tmp/wp-security-kit-cron.log 2>&1" > "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
+  echo "*/5 * * * * root $KIT_DIR/run-wp.sh --wp-cli=$WP_CLI_BIN $site cron event run --due-now --allow-root >> /tmp/wp-security-kit-cron.log 2>&1" > "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
   chmod 644 "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
 done
 if [[ -x "$KIT_DIR/sync-sites.sh" ]]; then
