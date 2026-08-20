@@ -7,6 +7,14 @@ WP_CLI_BIN="auto"
 DRY_RUN=0
 CONFIG_FILE="/etc/wp-security-kit/config.conf"
 
+lock_wordpress_core() {
+  local site="$1"
+  chmod 0555 "$site/wp-admin" "$site/wp-includes"
+  find "$site/wp-admin" "$site/wp-includes" -type d -exec chmod 0555 {} +
+  find "$site/wp-admin" "$site/wp-includes" -type f -exec chmod 0444 {} +
+  find "$site" -maxdepth 1 -type f -name '*.php' -exec chmod 0444 {} +
+}
+
 usage() { echo "Usage: sudo $0 [--root=auto|PATH] [--wp-cli=auto|PATH] [--config=PATH] [--dry-run]"; }
 for arg in "$@"; do
   case "$arg" in
@@ -71,11 +79,11 @@ fi
 for site in "${SITES[@]}"; do
   mu="$site/wp-content/mu-plugins"
   echo "==> $site"
-  if (( DRY_RUN )); then echo "    DRY-RUN: would install MU-plugins and cron"; continue; fi
+  if (( DRY_RUN )); then echo "    DRY-RUN: would install MU-plugins, lock WordPress core, and register cron"; continue; fi
   install -d -m 755 "$mu"
   backup="$site/wp-content/mu-plugins/.wp-security-kit-backup-$(date +%Y%m%d-%H%M%S)"
   install -d -m 700 "$backup"
-  for f in 00-pfhd-config.php pfhd-security-lock.php pfhd-upload-guard.php pfhd-core-update.php wp-security-monitor.php README.md uploads.htaccess.sample; do
+  for f in 00-pfhd-config.php pfhd-upload-guard.php pfhd-core-update.php wp-security-monitor.php README.md uploads.htaccess.sample; do
     [[ -f "$mu/$f" ]] && cp -p "$mu/$f" "$backup/$f"
   done
   install -m 644 "$KIT_DIR/mu-plugins/pfhd-upload-guard.php" "$mu/pfhd-upload-guard.php"
@@ -89,6 +97,12 @@ for site in "${SITES[@]}"; do
   else
     install -m 644 "$KIT_DIR/templates/uploads.htaccess" "$site/wp-content/uploads/.htaccess"
   fi
+  lock_wordpress_core "$site"
+  [[ "$(stat -c '%a' "$site/wp-admin")" == "555" && "$(stat -c '%a' "$site/wp-includes")" == "555" ]] || {
+    echo "Failed to lock WordPress core: $site" >&2
+    exit 1
+  }
+  echo "    Core locked: wp-admin/wp-includes=555, core files=444"
   site_hash="$(printf '%s' "$site" | sha256sum | awk '{print $1}')"
   slot="$(( 0x${site_hash:0:2} % 5 ))"
   cron_name="wp-security-kit-$(echo "$site" | tr '/.' '__')"

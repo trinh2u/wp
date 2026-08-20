@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PFHD Safe Core Update
  * Description: Temporarily unlocks WordPress core only during Dashboard core updates, then locks it again.
- * Version: 2.0.0
+ * Version: 2.1.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -51,9 +51,7 @@ function pfhd_core_lock() {
 	pfhd_core_chmod_tree( $root . '/wp-admin', 0555, 0444 );
 	pfhd_core_chmod_tree( $root . '/wp-includes', 0555, 0444 );
 	foreach ( glob( $root . '/*.php' ) ?: array() as $file ) {
-		if ( 'wp-config.php' !== basename( $file ) ) {
-			@chmod( $file, 0444 );
-		}
+		@chmod( $file, 0444 );
 	}
 	delete_option( PFHD_CORE_STATE );
 }
@@ -100,4 +98,3 @@ add_action( 'init', function () {
 		pfhd_core_alert( 'Watchdog: phát hiện core mở quyền quá 15 phút, đã tự khóa lại.' );
 	}
 }, 99 );
-

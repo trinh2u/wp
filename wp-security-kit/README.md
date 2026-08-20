@@ -34,6 +34,7 @@ File này có quyền `600`, không nằm trong webroot và không được comm
 
 - Upload Guard: chặn tên file executable qua WordPress, quét PHP/script trong uploads, gộp kết quả để tránh spam và ghi rõ domain/webroot trong cảnh báo.
 - Core Update Guard: khi admin bấm cập nhật WordPress core, tự mở quyền ghi tạm thời, sau đó khóa lại.
+- Installer khóa core ngay khi cài: `wp-admin`/`wp-includes` dùng `555`, file core và PHP ở webroot dùng `444`.
 - Telegram config loader: đọc bot token/group ID từ `/etc/wp-security-kit/config.conf`.
 - `.htaccess`: ngăn thực thi script trong `wp-content/uploads`.
 - Cron: chạy `wp-cron` mỗi 5 phút cho từng site vì nhiều site tắt WP-Cron theo traffic.
@@ -209,7 +210,9 @@ vào database mà không đi qua hook WordPress.
 
 ## Lưu ý
 
-Installer không chạy update core. Admin vẫn bấm Update Now trong Dashboard; Core Update Guard chỉ xử lý permission trong phiên update đó.
+Installer không chạy update core. Nó khóa core ngay sau khi cài. Admin vẫn bấm Update Now trong Dashboard;
+Core Update Guard mở quyền ghi trong phiên update và luôn khóa lại khi kết thúc hoặc khi watchdog phát hiện
+trạng thái mở quá 15 phút.
 
 Không commit `/etc/wp-security-kit/config.conf`, token Telegram, state/baseline runtime,
 password SSH hoặc database password vào repository. Repository không chứa domain, IP,
