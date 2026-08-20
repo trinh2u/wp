@@ -89,9 +89,6 @@ for site in "${SITES[@]}"; do
   else
     install -m 644 "$KIT_DIR/templates/uploads.htaccess" "$site/wp-content/uploads/.htaccess"
   fi
-  if [[ -x "$WP_CLI_BIN" ]]; then
-    timeout 240 "$KIT_DIR/run-wp.sh" --wp-cli="$WP_CLI_BIN" "$site" cron event run pfhd_upload_guard_scan --allow-root >/dev/null 2>&1 || true
-  fi
   site_hash="$(printf '%s' "$site" | sha256sum | awk '{print $1}')"
   slot="$(( 0x${site_hash:0:2} % 5 ))"
   cron_name="wp-security-kit-$(echo "$site" | tr '/.' '__')"

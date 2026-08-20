@@ -80,6 +80,8 @@ sudo ./install.sh --root=/www/wwwroot --wp-cli=/usr/local/bin/wp
 Chỉ thư mục có đủ `wp-load.php`, `wp-admin/` và `wp-includes/` mới được xem là site thật.
 Các bản lưu trong `backup`, `backups`, `OLD` và cây `dup-installer` được bỏ qua.
 Chế độ `--dry-run` không ghi MU-plugin, cron hoặc bất kỳ file hệ thống nào.
+Installer không ép chạy scanner ngay trong lúc cài; lượt quét đầu tiên diễn ra qua cron đã phân tải để
+tránh treo installer hoặc làm nhiều site tăng CPU cùng lúc.
 
 ## Tự cài cho site mới
 
