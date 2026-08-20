@@ -90,10 +90,13 @@ for site in "${SITES[@]}"; do
     install -m 644 "$KIT_DIR/templates/uploads.htaccess" "$site/wp-content/uploads/.htaccess"
   fi
   if [[ -x "$WP_CLI_BIN" ]]; then
-    "$KIT_DIR/run-wp.sh" --wp-cli="$WP_CLI_BIN" "$site" cron event run pfhd_upload_guard_scan --allow-root >/dev/null 2>&1 || true
+    timeout 240 "$KIT_DIR/run-wp.sh" --wp-cli="$WP_CLI_BIN" "$site" cron event run pfhd_upload_guard_scan --allow-root >/dev/null 2>&1 || true
   fi
-  echo "*/5 * * * * root $KIT_DIR/run-wp.sh --wp-cli=$WP_CLI_BIN $site cron event run --due-now --allow-root >> /tmp/wp-security-kit-cron.log 2>&1" > "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
-  chmod 644 "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
+  site_hash="$(printf '%s' "$site" | sha256sum | awk '{print $1}')"
+  slot="$(( 0x${site_hash:0:2} % 5 ))"
+  cron_name="wp-security-kit-$(echo "$site" | tr '/.' '__')"
+  echo "$slot-59/5 * * * * root flock -n /run/wp-security-kit-${site_hash:0:16}.lock timeout 240 $KIT_DIR/run-wp.sh --wp-cli=$WP_CLI_BIN $site cron event run --due-now --allow-root >> /tmp/wp-security-kit-cron.log 2>&1" > "/etc/cron.d/$cron_name"
+  chmod 644 "/etc/cron.d/$cron_name"
 done
 if [[ -x "$KIT_DIR/sync-sites.sh" ]]; then
   if (( DRY_RUN )); then

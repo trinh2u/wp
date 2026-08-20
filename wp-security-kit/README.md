@@ -37,6 +37,8 @@ File này có quyền `600`, không nằm trong webroot và không được comm
 - Telegram config loader: đọc bot token/group ID từ `/etc/wp-security-kit/config.conf`.
 - `.htaccess`: ngăn thực thi script trong `wp-content/uploads`.
 - Cron: chạy `wp-cron` mỗi 5 phút cho từng site vì nhiều site tắt WP-Cron theo traffic.
+  Installer phân site vào 5 mốc phút khác nhau, dùng lock chống chạy chồng và timeout 240 giây để tránh
+  hàng chục WP-CLI cùng khởi động hoặc một cron lỗi treo vô hạn.
 - **Cách ly site** (`isolate-site.sh` + `isolate-auto.sh`): mỗi site 1 user Linux + 1 pool PHP-FPM riêng.
 - **Giám sát checksum** (`guard-checksum.sh`): phát hiện file lạ/sai checksum trong core WordPress, báo Telegram.
 - **Giám sát file root + ảnh giả** (`guard-root-file.sh`): phát hiện file lạ ở thư mục gốc site (checksum-guard
