@@ -53,8 +53,9 @@ File này có quyền `600`, không nằm trong webroot và không được comm
 
 - **WP-CLI** (`wp`) có sẵn trong PATH, hoặc truyền `--wp-cli=/path/to/wp` cho `install.sh`.
 - `run-wp.sh` tự dùng system PHP khi tương thích; nếu system PHP thiếu `mysqli` (thường gặp trên CyberPanel),
-  script thử các LiteSpeed PHP CLI từ 7.4 trở lên và cache binary chạy được cho từng site tại
-  `/var/lib/wp-security-kit/php-map/`.
+  script tự dò mọi `/usr/local/lsws/lsphp*/bin/php`, sắp xếp theo phiên bản rồi cache binary chạy được cho
+  từng site tại `/var/lib/wp-security-kit/php-map/`. Không có danh sách phiên bản hard-code, nên các bản PHP
+  LiteSpeed mới được cài trong tương lai cũng tự được nhận diện.
 - **`file` (libmagic)** có sẵn — dùng để đọc mime type thật của file trong `guard-root-file.sh`.
 - **Chạy được trên mọi panel/server** (aaPanel, CyberPanel, Plesk, cPanel, LEMP/LAMP thường...):
   Upload Guard, Core Update Guard, `sync-sites.sh`, **`guard-checksum.sh`, `guard-root-file.sh`** — cả 5 chỉ

@@ -37,9 +37,8 @@ if timeout 30 "$WP_CLI_BIN" --path="$SITE" --skip-plugins --skip-themes core is-
   exec "$WP_CLI_BIN" --path="$SITE" "$@"
 fi
 
-for PHP_BIN in /usr/local/lsws/lsphp74/bin/php /usr/local/lsws/lsphp80/bin/php \
-               /usr/local/lsws/lsphp81/bin/php /usr/local/lsws/lsphp82/bin/php \
-               /usr/local/lsws/lsphp83/bin/php /usr/local/lsws/lsphp84/bin/php; do
+mapfile -t PHP_CANDIDATES < <(compgen -G '/usr/local/lsws/lsphp*/bin/php' | sort -V)
+for PHP_BIN in "${PHP_CANDIDATES[@]}"; do
   [[ -x "$PHP_BIN" ]] || continue
   if timeout 30 "$PHP_BIN" "$WP_CLI_BIN" --path="$SITE" --skip-plugins --skip-themes core is-installed --allow-root >/dev/null 2>&1; then
     printf '%s\n' "$PHP_BIN" > "$cache"
