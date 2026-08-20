@@ -45,7 +45,8 @@ File này có quyền `600`, không nằm trong webroot và không được comm
 - Cảnh báo khi tạo admin, cấp quyền admin, đổi thông tin/mật khẩu admin.
 - Theo dõi việc tạo, xóa, thay đổi và sử dụng WordPress Application Password.
 - Cảnh báo bài viết được tạo qua REST API, số bài tăng đột biến và từ khóa spam phổ biến.
-- Theo dõi plugin đang active, theme, cron, tùy chọn nhạy cảm và checksum mã PHP trong plugin/theme/MU-plugin.
+- Theo dõi plugin đang active, theme, cron, tùy chọn nhạy cảm và checksum mã PHP trong plugin/theme/MU-plugin
+  (phần hash mã nguồn chạy mỗi 6 giờ để tránh tạo tải CPU lớn; các kiểm tra database vẫn chạy mỗi 5 phút).
 - Lưu 100 sự kiện gần nhất trong database từng site; duyệt baseline tại **Tools → WP Security Kit**.
 
 ## Yêu cầu

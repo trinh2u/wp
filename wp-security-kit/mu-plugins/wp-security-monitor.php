@@ -12,6 +12,7 @@ const WPSK_MONITOR_BASELINE = 'wpsk_security_monitor_baseline';
 const WPSK_MONITOR_PENDING  = 'wpsk_security_monitor_pending';
 const WPSK_MONITOR_HISTORY  = 'wpsk_security_monitor_history';
 const WPSK_MONITOR_NOTICES  = 'wpsk_security_monitor_notices';
+const WPSK_MONITOR_CODE_RUN = 'wpsk_security_monitor_last_code_scan';
 const WPSK_MONITOR_VERSION  = 1;
 
 function wpsk_monitor_alert( $code, $message, $severity = 'warning', $context = array() ) {
@@ -156,7 +157,11 @@ function wpsk_monitor_compare_map( $old, $new, $added_code, $removed_code, $chan
 
 function wpsk_monitor_scan() {
 	$baseline = get_option( WPSK_MONITOR_BASELINE, array() );
-	$current  = wpsk_monitor_snapshot( true );
+	$scan_code = ! is_array( $baseline ) || empty( $baseline['php_code'] ) ||
+		( time() - (int) get_option( WPSK_MONITOR_CODE_RUN, 0 ) >= 6 * HOUR_IN_SECONDS );
+	$current  = wpsk_monitor_snapshot( $scan_code );
+	if ( ! $scan_code && isset( $baseline['php_code'] ) ) $current['php_code'] = $baseline['php_code'];
+	if ( $scan_code ) update_option( WPSK_MONITOR_CODE_RUN, time(), false );
 	if ( ! is_array( $baseline ) || empty( $baseline['version'] ) ) {
 		update_option( WPSK_MONITOR_BASELINE, $current, false );
 		return;
