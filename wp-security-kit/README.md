@@ -32,7 +32,7 @@ File này có quyền `600`, không nằm trong webroot và không được comm
 
 ## Chức năng
 
-- Upload Guard: chặn tên file executable qua WordPress và quét PHP/script trong uploads.
+- Upload Guard: chặn tên file executable qua WordPress, quét PHP/script trong uploads, gộp kết quả để tránh spam và ghi rõ domain/webroot trong cảnh báo.
 - Core Update Guard: khi admin bấm cập nhật WordPress core, tự mở quyền ghi tạm thời, sau đó khóa lại.
 - Telegram config loader: đọc bot token/group ID từ `/etc/wp-security-kit/config.conf`.
 - `.htaccess`: ngăn thực thi script trong `wp-content/uploads`.

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PFHD Upload Guard
  * Description: Rejects executable uploads and alerts when PHP-like files appear in uploads.
- * Version: 1.0.0
+ * Version: 1.1.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,6 +13,10 @@ const PFHD_UG_CRON_HOOK = 'pfhd_upload_guard_scan';
 const PFHD_UG_OPTION   = 'pfhd_upload_guard_state';
 
 function pfhd_ug_alert( $message ) {
+	$host = wp_parse_url( home_url( '/' ), PHP_URL_HOST );
+	$host = $host ? $host : 'unknown-site';
+	$root = defined( 'ABSPATH' ) ? wp_normalize_path( ABSPATH ) : 'unknown-root';
+	$message = "Site: {$host}\nWebroot: {$root}\n{$message}";
 	if ( function_exists( 'pfhd_tg_alert' ) ) {
 		pfhd_tg_alert( $message );
 	} else {
@@ -45,8 +49,9 @@ function pfhd_ug_scan_uploads() {
 	if ( ! is_array( $state ) ) {
 		$state = array();
 	}
-	$seen  = array();
-	$found = 0;
+	$seen    = array();
+	$found   = 0;
+	$changed = array();
 	$it    = new RecursiveIteratorIterator(
 		new RecursiveDirectoryIterator( $root, FilesystemIterator::SKIP_DOTS )
 	);
@@ -68,11 +73,21 @@ function pfhd_ug_scan_uploads() {
 		$stat = array( 'size' => (int) $info->getSize(), 'mtime' => (int) $info->getMTime() );
 		$seen[ $rel ] = $stat;
 		if ( ! isset( $state[ $rel ] ) || $state[ $rel ] !== $stat ) {
-			pfhd_ug_alert( "Executable-like file in uploads:\n{$rel}\nSize: {$stat['size']} bytes\nAction: Apache .htaccess should prevent execution; investigate and remove/quarantine manually." );
+			$changed[] = $rel . ' (' . $stat['size'] . ' bytes)';
 		}
 	}
 
 	update_option( PFHD_UG_OPTION, $seen, false );
+	if ( $changed ) {
+		$shown = array_slice( $changed, 0, 20 );
+		$more  = count( $changed ) - count( $shown );
+		$body  = "Executable-like files detected in uploads:\n- " . implode( "\n- ", $shown );
+		if ( $more > 0 ) {
+			$body .= "\n... plus {$more} more file(s).";
+		}
+		$body .= "\nAction: web-server rules should prevent execution; investigate and quarantine manually.";
+		pfhd_ug_alert( $body );
+	}
 	if ( $found > 0 ) {
 		error_log( '[PFHD Upload Guard] suspicious files in uploads: ' . $found );
 	}
