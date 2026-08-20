@@ -71,6 +71,10 @@ Installer tự dò các root phổ biến: `/www/wwwroot`, `/home`, `/var/www`, 
 sudo ./install.sh --root=/www/wwwroot --wp-cli=/usr/local/bin/wp
 ```
 
+Chỉ thư mục có đủ `wp-load.php`, `wp-admin/` và `wp-includes/` mới được xem là site thật.
+Các bản lưu trong `backup`, `backups`, `OLD` và cây `dup-installer` được bỏ qua.
+Chế độ `--dry-run` không ghi MU-plugin, cron hoặc bất kỳ file hệ thống nào.
+
 ## Tự cài cho site mới
 
 `install.sh` **tự đăng ký cron** cho việc này — chỉ cần cài 1 lần, không phải làm gì thêm. Nó ghi

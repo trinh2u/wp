@@ -38,7 +38,14 @@ if [[ "$ROOT_DIR" == "auto" ]]; then
 else
   ROOTS=("$ROOT_DIR")
 fi
-mapfile -t SITES < <(for root in "${ROOTS[@]}"; do find "$root" -type f -name wp-config.php -not -path '*/wp-content/*' -not -path '*/backups/*' -printf '%h\n' 2>/dev/null; done | sort -u)
+mapfile -t SITES < <(for root in "${ROOTS[@]}"; do
+  find "$root" -type f -name wp-config.php \
+    -not -path '*/wp-content/*' -not -path '*/backups/*' -not -path '*/backup/*' \
+    -not -path '*/OLD/*' -not -path '*/old/*' -not -path '*/dup-installer/*' \
+    -printf '%h\n' 2>/dev/null
+done | while IFS= read -r site; do
+  [[ -f "$site/wp-load.php" && -d "$site/wp-admin" && -d "$site/wp-includes" ]] && printf '%s\n' "$site"
+done | sort -u)
 if [[ ${#SITES[@]} -eq 0 ]]; then echo "No WordPress sites found below $ROOT_DIR"; exit 1; fi
 echo "Found ${#SITES[@]} WordPress site(s):"; printf '  %s\n' "${SITES[@]}"
 
@@ -88,9 +95,13 @@ for site in "${SITES[@]}"; do
   chmod 644 "/etc/cron.d/wp-security-kit-$(echo "$site" | tr '/.' '__')"
 done
 if [[ -x "$KIT_DIR/sync-sites.sh" ]]; then
-  echo "*/15 * * * * root $KIT_DIR/sync-sites.sh $ROOT_DIR >> /var/log/wp-security-kit-sync.log 2>&1" > /etc/cron.d/wp-security-kit-sync
-  chmod 644 /etc/cron.d/wp-security-kit-sync
-  echo "Registered periodic sync-sites.sh (every 15 min) at /etc/cron.d/wp-security-kit-sync"
+  if (( DRY_RUN )); then
+    echo "DRY-RUN: would register periodic sync-sites.sh at /etc/cron.d/wp-security-kit-sync"
+  else
+    echo "*/15 * * * * root $KIT_DIR/sync-sites.sh $ROOT_DIR >> /var/log/wp-security-kit-sync.log 2>&1" > /etc/cron.d/wp-security-kit-sync
+    chmod 644 /etc/cron.d/wp-security-kit-sync
+    echo "Registered periodic sync-sites.sh (every 15 min) at /etc/cron.d/wp-security-kit-sync"
+  fi
 fi
 
 echo "Installation complete. Config: $CONFIG_FILE"

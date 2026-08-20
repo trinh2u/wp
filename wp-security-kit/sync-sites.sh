@@ -35,7 +35,12 @@ else
 fi
 
 mapfile -t SITES < <(for root in "${ROOTS[@]}"; do
-  find "$root" -type f -name wp-config.php -not -path '*/wp-content/*' -not -path '*/backups/*' -printf '%h\n' 2>/dev/null
+  find "$root" -type f -name wp-config.php \
+    -not -path '*/wp-content/*' -not -path '*/backups/*' -not -path '*/backup/*' \
+    -not -path '*/OLD/*' -not -path '*/old/*' -not -path '*/dup-installer/*' \
+    -printf '%h\n' 2>/dev/null
+done | while IFS= read -r site; do
+  [[ -f "$site/wp-load.php" && -d "$site/wp-admin" && -d "$site/wp-includes" ]] && printf '%s\n' "$site"
 done | sort -u)
 
 for site in "${SITES[@]}"; do
