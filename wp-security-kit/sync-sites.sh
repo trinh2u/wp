@@ -43,7 +43,8 @@ for site in "${SITES[@]}"; do
   # Seed state for sites already installed before sync-sites was introduced.
   if [[ -f "$site/wp-content/mu-plugins/00-pfhd-config.php" && \
         -f "$site/wp-content/mu-plugins/pfhd-upload-guard.php" && \
-        -f "$site/wp-content/mu-plugins/pfhd-core-update.php" ]]; then
+        -f "$site/wp-content/mu-plugins/pfhd-core-update.php" && \
+        -f "$site/wp-content/mu-plugins/wp-security-monitor.php" ]]; then
     printf '%s\n' "$site" >> "$STATE_FILE"
     continue
   fi

@@ -41,6 +41,12 @@ File này có quyền `600`, không nằm trong webroot và không được comm
 - **Giám sát checksum** (`guard-checksum.sh`): phát hiện file lạ/sai checksum trong core WordPress, báo Telegram.
 - **Giám sát file root + ảnh giả** (`guard-root-file.sh`): phát hiện file lạ ở thư mục gốc site (checksum-guard
   không quét tới) và file mang đuôi ảnh nhưng nội dung thật là ZIP/PHP/executable.
+- Security Monitor: tạo baseline và cảnh báo khi nội dung/trang được chọn làm trang chủ thay đổi.
+- Cảnh báo khi tạo admin, cấp quyền admin, đổi thông tin/mật khẩu admin.
+- Theo dõi việc tạo, xóa, thay đổi và sử dụng WordPress Application Password.
+- Cảnh báo bài viết được tạo qua REST API, số bài tăng đột biến và từ khóa spam phổ biến.
+- Theo dõi plugin đang active, theme, cron, tùy chọn nhạy cảm và checksum mã PHP trong plugin/theme/MU-plugin.
+- Lưu 100 sự kiện gần nhất trong database từng site; duyệt baseline tại **Tools → WP Security Kit**.
 
 ## Yêu cầu
 
@@ -58,7 +64,6 @@ File này có quyền `600`, không nằm trong webroot và không được comm
   aaPanel) và **thoát ngay, không làm gì**, nếu không phải aaPanel — an toàn khi lỡ chạy nhầm server khác.
   (Lý do sâu hơn: CyberPanel/Plesk/cPanel vốn đã cô lập user riêng cho từng site theo mặc định — vấn đề
   "mọi site chung 1 user" mà 2 script này giải quyết chỉ tồn tại trên aaPanel.)
-
 Installer tự dò các root phổ biến: `/www/wwwroot`, `/home`, `/var/www`, `/srv/www`, `/opt/www`; có thể chỉ định thủ công:
 
 ```bash
@@ -174,14 +179,24 @@ giãn cron nếu VPS có hàng chục nghìn ảnh.
 
 ```bash
 wp cron event list --allow-root | grep pfhd_upload_guard
+wp cron event list --allow-root | grep wpsk_security_monitor
 stat -c '%a %n' wp-admin wp-includes
 sudo /root/wp-security-kit/guard-checksum.sh && tail /var/log/wp-security-kit-checksum.log
 sudo /root/wp-security-kit/isolate-auto.sh && tail /var/log/auto-isolate.log
 sudo /root/wp-security-kit/guard-root-file.sh && tail /var/log/wp-security-kit-rootguard.log
 ```
 
+Lần quét đầu tiên tự tạo baseline và không gửi cảnh báo. Sau một thay đổi hợp lệ, vào
+**Tools → WP Security Kit** để xem lịch sử và chọn **Approve current state as baseline**.
+
+Application Password là cơ chế xác thực thường được dùng với REST API. Monitor cảnh báo
+ngay tại hook tạo/xác thực và cũng đối chiếu định kỳ, kể cả khi thay đổi được ghi trực tiếp
+vào database mà không đi qua hook WordPress.
+
 ## Lưu ý
 
 Installer không chạy update core. Admin vẫn bấm Update Now trong Dashboard; Core Update Guard chỉ xử lý permission trong phiên update đó.
 
-Không commit `/etc/wp-security-kit/config.conf`, token Telegram, password SSH hoặc database password vào repository.
+Không commit `/etc/wp-security-kit/config.conf`, token Telegram, state/baseline runtime,
+password SSH hoặc database password vào repository. Repository không chứa domain, IP,
+email, tài khoản hay chi tiết sự cố của bất kỳ site cụ thể nào.

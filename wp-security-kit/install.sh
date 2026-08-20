@@ -20,7 +20,7 @@ for arg in "$@"; do
 done
 
 if [[ $EUID -ne 0 ]]; then echo "Run as root: sudo $0"; exit 1; fi
-if [[ ! -f "$KIT_DIR/mu-plugins/pfhd-upload-guard.php" || ! -f "$KIT_DIR/mu-plugins/pfhd-core-update.php" ]]; then
+if [[ ! -f "$KIT_DIR/mu-plugins/pfhd-upload-guard.php" || ! -f "$KIT_DIR/mu-plugins/pfhd-core-update.php" || ! -f "$KIT_DIR/mu-plugins/wp-security-monitor.php" ]]; then
   echo "Missing package files under $KIT_DIR/mu-plugins"; exit 1
 fi
 
@@ -67,11 +67,12 @@ for site in "${SITES[@]}"; do
   install -d -m 755 "$mu"
   backup="$site/wp-content/mu-plugins/.wp-security-kit-backup-$(date +%Y%m%d-%H%M%S)"
   install -d -m 700 "$backup"
-  for f in 00-pfhd-config.php pfhd-security-lock.php pfhd-upload-guard.php pfhd-core-update.php README.md uploads.htaccess.sample; do
+  for f in 00-pfhd-config.php pfhd-security-lock.php pfhd-upload-guard.php pfhd-core-update.php wp-security-monitor.php README.md uploads.htaccess.sample; do
     [[ -f "$mu/$f" ]] && cp -p "$mu/$f" "$backup/$f"
   done
   install -m 644 "$KIT_DIR/mu-plugins/pfhd-upload-guard.php" "$mu/pfhd-upload-guard.php"
   install -m 644 "$KIT_DIR/mu-plugins/pfhd-core-update.php" "$mu/pfhd-core-update.php"
+  install -m 644 "$KIT_DIR/mu-plugins/wp-security-monitor.php" "$mu/wp-security-monitor.php"
   install -m 644 "$KIT_DIR/mu-plugins/00-pfhd-config.php" "$mu/00-pfhd-config.php"
   install -m 644 "$KIT_DIR/README.md" "$mu/README-WP-SECURITY-KIT.md"
   install -m 644 "$KIT_DIR/templates/uploads.htaccess" "$mu/uploads.htaccess.sample"
