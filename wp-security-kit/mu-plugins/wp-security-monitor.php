@@ -5,7 +5,7 @@
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-const WPSK_MONITOR_HOOK='wpsk_security_monitor_scan', WPSK_MONITOR_BASELINE='wpsk_security_monitor_baseline', WPSK_MONITOR_PENDING='wpsk_security_monitor_pending', WPSK_MONITOR_HISTORY='wpsk_security_monitor_history', WPSK_MONITOR_NOTICES='wpsk_security_monitor_notices', WPSK_MONITOR_CODE_RUN='wpsk_security_monitor_last_code_scan', WPSK_MONITOR_AUDIT='wpsk_security_monitor_audit', WPSK_MONITOR_VERSION=2;
+const WPSK_MONITOR_HOOK='wpsk_security_monitor_scan', WPSK_MONITOR_BASELINE='wpsk_security_monitor_baseline', WPSK_MONITOR_PENDING='wpsk_security_monitor_pending', WPSK_MONITOR_HISTORY='wpsk_security_monitor_history', WPSK_MONITOR_NOTICES='wpsk_security_monitor_notices', WPSK_MONITOR_CODE_RUN='wpsk_security_monitor_last_code_scan', WPSK_MONITOR_AUDIT='wpsk_security_monitor_audit', WPSK_MONITOR_VERSION=3;
 
 function wpsk_monitor_hash($v){return hash('sha256',serialize($v));}
 function wpsk_monitor_history($code,$message,$severity='warning',$context=array()){
@@ -36,7 +36,7 @@ function wpsk_monitor_cron_shape(){
 	$r=array();$cron=_get_cron_array();foreach(is_array($cron)?$cron:array()as $hooks)foreach($hooks as $hook=>$events)foreach($events as $e){$s=(string)($e['schedule']??'');if($s===''||preg_match('/^wp_\d+_wc_privacy_cleanup_cron$/',(string)$hook))continue;$r[]=array($hook,$s,wpsk_monitor_hash($e['args']??array()));}sort($r);return $r;
 }
 function wpsk_monitor_php_code(){
-	$files=array();foreach(array_unique(array(WP_PLUGIN_DIR,get_theme_root(),WPMU_PLUGIN_DIR))as $root){if(!is_dir($root))continue;$it=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root,FilesystemIterator::SKIP_DOTS));foreach($it as $i){if(!$i->isFile()||!preg_match('/\.php$/i',$i->getFilename()))continue;$p=$i->getPathname();if(strpos($p,DIRECTORY_SEPARATOR.'.wp-security-kit-backup-')!==false)continue;$files[str_replace(ABSPATH,'',$p)]=array((int)$i->getSize(),hash_file('sha256',$p));}}ksort($files);return array('count'=>count($files),'hash'=>wpsk_monitor_hash($files),'files'=>$files);
+	$files=array();$managed=array('00-pfhd-config.php','pfhd-core-update.php','pfhd-upload-guard.php','wp-security-monitor.php');foreach(array_unique(array(WP_PLUGIN_DIR,get_theme_root(),WPMU_PLUGIN_DIR))as $root){if(!is_dir($root))continue;$it=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root,FilesystemIterator::SKIP_DOTS));foreach($it as $i){if(!$i->isFile()||!preg_match('/\.php$/i',$i->getFilename()))continue;$p=$i->getPathname();if(strpos($p,DIRECTORY_SEPARATOR.'.wp-security-kit-backup-')!==false||($i->getPath()===WPMU_PLUGIN_DIR&&in_array($i->getFilename(),$managed,true)))continue;$files[str_replace(ABSPATH,'',$p)]=array((int)$i->getSize(),hash_file('sha256',$p));}}ksort($files);return array('count'=>count($files),'hash'=>wpsk_monitor_hash($files),'files'=>$files);
 }
 function wpsk_monitor_snapshot($code=true){
 	$s=array();foreach(array('siteurl','home','users_can_register','default_role','active_plugins','stylesheet','template','admin_email')as $n)$s[$n]=wpsk_monitor_hash(get_option($n,null));$r=array('version'=>WPSK_MONITOR_VERSION,'captured'=>time(),'homepage'=>wpsk_monitor_homepage(),'admins'=>wpsk_monitor_admins(),'application_passwords'=>wpsk_monitor_apps(),'sensitive_options'=>$s,'cron_shape'=>wpsk_monitor_cron_shape());if($code)$r['php_code']=wpsk_monitor_php_code();return $r;
