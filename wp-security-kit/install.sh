@@ -76,6 +76,13 @@ else
   echo "Using existing config: $CONFIG_FILE"
 fi
 
+if (( DRY_RUN == 0 )) && ! grep -q '^WPSK_APPROVAL_SECRET=' "$CONFIG_FILE"; then
+  approval_secret="$(openssl rand -hex 32)"
+  printf 'WPSK_APPROVAL_SECRET=%q\n' "$approval_secret" >> "$CONFIG_FILE"
+  chmod 600 "$CONFIG_FILE"
+  echo "Added signed approval secret to $CONFIG_FILE"
+fi
+
 for site in "${SITES[@]}"; do
   mu="$site/wp-content/mu-plugins"
   echo "==> $site"
@@ -106,7 +113,7 @@ for site in "${SITES[@]}"; do
   site_hash="$(printf '%s' "$site" | sha256sum | awk '{print $1}')"
   slot="$(( 0x${site_hash:0:2} % 5 ))"
   cron_name="wp-security-kit-$(echo "$site" | tr '/.' '__')"
-  echo "$slot-59/5 * * * * root flock -n /run/wp-security-kit-${site_hash:0:16}.lock timeout 240 $KIT_DIR/run-wp.sh --wp-cli=$WP_CLI_BIN $site cron event run --due-now --allow-root >> /tmp/wp-security-kit-cron.log 2>&1" > "/etc/cron.d/$cron_name"
+  echo "$slot-59/5 * * * * root flock -n /run/wp-security-kit-${site_hash:0:16}.lock timeout 240 $KIT_DIR/run-wp.sh --wp-cli=$WP_CLI_BIN $site cron event run pfhd_upload_guard_scan wpsk_security_monitor_scan --due-now --allow-root >> /tmp/wp-security-kit-cron.log 2>&1" > "/etc/cron.d/$cron_name"
   chmod 644 "/etc/cron.d/$cron_name"
 done
 if [[ -x "$KIT_DIR/sync-sites.sh" ]]; then

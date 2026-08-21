@@ -10,9 +10,10 @@ if (@is_readable($cfg)) {
 }
 if (!defined('PFHD_TG_BOT_TOKEN')) define('PFHD_TG_BOT_TOKEN', (string)($values['PFHD_TG_BOT_TOKEN'] ?? ''));
 if (!defined('PFHD_TG_CHAT_ID')) define('PFHD_TG_CHAT_ID', (string)($values['PFHD_TG_CHAT_ID'] ?? ''));
+if (!defined('WPSK_APPROVAL_SECRET')) define('WPSK_APPROVAL_SECRET', (string)($values['WPSK_APPROVAL_SECRET'] ?? ''));
 
 if (!function_exists('pfhd_tg_alert')) {
-    function pfhd_tg_alert($message) {
+    function pfhd_tg_alert($message, $options = array()) {
         if (!PFHD_TG_BOT_TOKEN || !PFHD_TG_CHAT_ID) {
             error_log('[WP Security Kit] Telegram config missing');
             return false;
@@ -22,6 +23,9 @@ if (!function_exists('pfhd_tg_alert')) {
             'text' => "[WP SECURITY] " . wp_strip_all_tags((string)$message),
             'disable_web_page_preview' => 'true',
         );
+        if (!empty($options['reply_markup'])) {
+            $body['reply_markup'] = wp_json_encode($options['reply_markup']);
+        }
         $response = wp_remote_post('https://api.telegram.org/bot' . rawurlencode(PFHD_TG_BOT_TOKEN) . '/sendMessage', array(
             'timeout' => 5,
             'body' => $body,

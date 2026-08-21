@@ -37,7 +37,8 @@ File này có quyền `600`, không nằm trong webroot và không được comm
 - Installer khóa core ngay khi cài: `wp-admin`/`wp-includes` dùng `555`, file core và PHP ở webroot dùng `444`.
 - Telegram config loader: đọc bot token/group ID từ `/etc/wp-security-kit/config.conf`.
 - `.htaccess`: ngăn thực thi script trong `wp-content/uploads`.
-- Cron: chạy `wp-cron` mỗi 5 phút cho từng site vì nhiều site tắt WP-Cron theo traffic.
+- Cron: chỉ chạy hai hook của Security Kit mỗi 5 phút cho từng site. Kit không chạy toàn bộ cron đến hạn,
+  nên cài đặt không kích hoạt core/plugin/theme/language auto-update hoặc job tồn đọng của site khách.
   Installer phân site vào 5 mốc phút khác nhau, dùng lock chống chạy chồng và timeout 240 giây để tránh
   hàng chục WP-CLI cùng khởi động hoặc một cron lỗi treo vô hạn.
 - **Cách ly site** (`isolate-site.sh` + `isolate-auto.sh`): mỗi site 1 user Linux + 1 pool PHP-FPM riêng.
@@ -50,6 +51,10 @@ File này có quyền `600`, không nằm trong webroot và không được comm
 - Cảnh báo bài viết được tạo qua REST API, số bài tăng đột biến và từ khóa spam phổ biến.
 - Theo dõi plugin đang active, theme, cron, tùy chọn nhạy cảm và checksum mã PHP trong plugin/theme/MU-plugin
   (phần hash mã nguồn chạy mỗi 6 giờ để tránh tạo tải CPU lớn; các kiểm tra database vẫn chạy mỗi 5 phút).
+- Cảnh báo baseline trên Telegram liệt kê file PHP thêm/sửa/xóa và có nút **Xem & xác nhận**. Nút mở
+  trang xác nhận ký HMAC, chỉ hợp lệ với đúng snapshot đang chờ, dùng một lần và tự hết hạn sau 24 giờ.
+- Cron chạy một lần (`Non-repeating`) và thư mục backup của chính kit không được đưa vào baseline để
+  tránh cảnh báo giả. Cùng một snapshot chỉ gửi Telegram một lần.
 - Lưu 100 sự kiện gần nhất trong database từng site; duyệt baseline tại **Tools → WP Security Kit**.
 
 ## Yêu cầu
@@ -83,6 +88,9 @@ Các bản lưu trong `backup`, `backups`, `OLD` và cây `dup-installer` đư�
 Chế độ `--dry-run` không ghi MU-plugin, cron hoặc bất kỳ file hệ thống nào.
 Installer không ép chạy scanner ngay trong lúc cài; lượt quét đầu tiên diễn ra qua cron đã phân tải để
 tránh treo installer hoặc làm nhiều site tăng CPU cùng lúc.
+Dispatcher chỉ gọi `pfhd_upload_guard_scan` và `wpsk_security_monitor_scan`; tuyệt đối không dùng
+`wp cron event run --due-now` không kèm tên hook, vì lệnh đó sẽ kích hoạt mọi job đến hạn của site khách,
+có thể bao gồm WordPress/language/plugin auto-update.
 
 ## Tự cài cho site mới
 
